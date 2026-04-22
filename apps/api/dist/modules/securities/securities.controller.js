@@ -23,8 +23,8 @@ let SecuritiesController = class SecuritiesController {
     constructor(securitiesService) {
         this.securitiesService = securitiesService;
     }
-    findAll(search, type) {
-        return this.securitiesService.findAll(search, type);
+    findAll(query) {
+        return this.securitiesService.findAll(query.search, query.type);
     }
     getMarketSummary() {
         return this.securitiesService.getMarketSummary();
@@ -48,10 +48,9 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'List all active securities' }),
     (0, swagger_1.ApiQuery)({ name: 'search', required: false }),
     (0, swagger_1.ApiQuery)({ name: 'type', enum: security_entity_1.SecurityType, required: false }),
-    __param(0, (0, common_1.Query)('search')),
-    __param(1, (0, common_1.Query)('type')),
+    __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:paramtypes", [securities_service_1.FindSecuritiesQueryDto]),
     __metadata("design:returntype", void 0)
 ], SecuritiesController.prototype, "findAll", null);
 __decorate([

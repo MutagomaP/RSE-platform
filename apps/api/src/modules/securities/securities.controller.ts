@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Param, Body, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { SecuritiesService, CreateSecurityDto } from './securities.service';
+import { SecuritiesService, CreateSecurityDto, FindSecuritiesQueryDto } from './securities.service';
 import { JwtAuthGuard, RolesGuard, Roles } from '../auth/guards';
 import { UserRole } from '../users/user.entity';
 import { SecurityType } from './security.entity';
@@ -14,8 +14,8 @@ export class SecuritiesController {
   @ApiOperation({ summary: 'List all active securities' })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'type', enum: SecurityType, required: false })
-  findAll(@Query('search') search?: string, @Query('type') type?: SecurityType) {
-    return this.securitiesService.findAll(search, type);
+  findAll(@Query() query: FindSecuritiesQueryDto) {
+    return this.securitiesService.findAll(query.search, query.type);
   }
 
   @Get('market-summary')

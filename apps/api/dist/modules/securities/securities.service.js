@@ -12,13 +12,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SecuritiesService = exports.CreateSecurityDto = void 0;
+exports.SecuritiesService = exports.FindSecuritiesQueryDto = exports.CreateSecurityDto = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const security_entity_1 = require("./security.entity");
 const class_validator_1 = require("class-validator");
 const swagger_1 = require("@nestjs/swagger");
+const class_transformer_1 = require("class-transformer");
 class CreateSecurityDto {
 }
 exports.CreateSecurityDto = CreateSecurityDto;
@@ -79,6 +80,22 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateSecurityDto.prototype, "primaryExchange", void 0);
+class FindSecuritiesQueryDto {
+}
+exports.FindSecuritiesQueryDto = FindSecuritiesQueryDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FindSecuritiesQueryDto.prototype, "search", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ enum: security_entity_1.SecurityType }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => (value === '' ? undefined : value)),
+    (0, class_validator_1.IsEnum)(security_entity_1.SecurityType),
+    __metadata("design:type", String)
+], FindSecuritiesQueryDto.prototype, "type", void 0);
 let SecuritiesService = class SecuritiesService {
     constructor(repo) {
         this.repo = repo;

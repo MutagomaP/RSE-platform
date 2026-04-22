@@ -4,6 +4,7 @@ import { Repository, Like } from 'typeorm';
 import { Security, SecurityType, SecurityStatus } from './security.entity';
 import { IsString, IsOptional, IsNumber, IsBoolean, IsEnum } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class CreateSecurityDto {
   @ApiProperty() @IsString() ticker: string;
@@ -16,6 +17,15 @@ export class CreateSecurityDto {
   @ApiPropertyOptional() @IsOptional() @IsString() description?: string;
   @ApiPropertyOptional() @IsOptional() @IsBoolean() isCrossListed?: boolean;
   @ApiPropertyOptional() @IsOptional() @IsString() primaryExchange?: string;
+}
+
+export class FindSecuritiesQueryDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() search?: string;
+  @ApiPropertyOptional({ enum: SecurityType })
+  @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  @IsEnum(SecurityType)
+  type?: SecurityType;
 }
 
 @Injectable()

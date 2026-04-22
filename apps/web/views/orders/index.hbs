@@ -82,6 +82,7 @@
                   <option value="">Loading…</option>
                 </select>
                 <p class="form-hint" id="currentPriceHint"></p>
+                <p class="form-hint" id="availableSharesHint" style="display:none;"></p>
               </div>
               <div class="form-group">
                 <label class="form-label">Order Type</label>
@@ -117,6 +118,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const securitiesData = {{{securities}}};
-    populateSecuritySelect(securitiesData);
+    const portfolioData = {{{portfolio}}};
+    populateSecuritySelect(securitiesData, portfolioData);
   });
 </script>

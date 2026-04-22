@@ -1,9 +1,8 @@
-import { SecuritiesService, CreateSecurityDto } from './securities.service';
-import { SecurityType } from './security.entity';
+import { SecuritiesService, CreateSecurityDto, FindSecuritiesQueryDto } from './securities.service';
 export declare class SecuritiesController {
     private securitiesService;
     constructor(securitiesService: SecuritiesService);
-    findAll(search?: string, type?: SecurityType): Promise<import("./security.entity").Security[]>;
+    findAll(query: FindSecuritiesQueryDto): Promise<import("./security.entity").Security[]>;
     getMarketSummary(): Promise<{
         totalListings: number;
         totalMarketCap: number;

@@ -18,7 +18,7 @@ export declare class SecuritiesModule {
 export declare class BrokersController {
     private apiService;
     constructor(apiService: ApiService);
-    index(res: Response): Promise<void>;
+    index(status: string, req: any, res: Response): Promise<void>;
     detail(id: string, res: Response): Promise<void>;
 }
 export declare class BrokersModule {

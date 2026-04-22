@@ -109,9 +109,16 @@ let BrokersController = class BrokersController {
     constructor(apiService) {
         this.apiService = apiService;
     }
-    async index(res) {
-        const brokers = await this.apiService.getBrokers('licensed').catch(() => []);
-        return res.render('brokers/index', { title: 'Licensed Brokers — RSE', brokers, page: 'brokers' });
+    async index(status, req, res) {
+        const brokers = await this.apiService.getBrokers(status || '').catch(() => []);
+        return res.render('brokers/index', {
+            title: 'Brokers — RSE',
+            brokers,
+            status,
+            isLoggedIn: !!req.user,
+            isAdmin: req.user?.role === 'admin',
+            page: 'brokers',
+        });
     }
     async detail(id, res) {
         try {
@@ -126,9 +133,11 @@ let BrokersController = class BrokersController {
 exports.BrokersController = BrokersController;
 __decorate([
     (0, common_1.Get)(),
-    __param(0, (0, common_1.Res)()),
+    __param(0, (0, common_1.Query)('status')),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String, Object, Object]),
     __metadata("design:returntype", Promise)
 ], BrokersController.prototype, "index", null);
 __decorate([
@@ -194,10 +203,11 @@ let OrdersController = class OrdersController {
         const role = req.user?.role;
         const isAdminOrBroker = role === 'admin' || role === 'broker';
         try {
-            const [myOrders, allOrders, securities] = await Promise.all([
+            const [myOrders, allOrders, securities, portfolio] = await Promise.all([
                 this.apiService.getMyOrders(req.token).catch(() => []),
                 isAdminOrBroker ? this.apiService.getAllOrders(req.token, status, side).catch(() => []) : Promise.resolve([]),
                 this.apiService.getSecurities().catch(() => []),
+                this.apiService.getPortfolio(req.token).catch(() => []),
             ]);
             return res.render('orders/index', {
                 title: 'Orders — RSE',
@@ -205,13 +215,14 @@ let OrdersController = class OrdersController {
                 isAdmin: role === 'admin',
                 isBroker: role === 'broker',
                 securities: JSON.stringify(securities),
+                portfolio: JSON.stringify(Array.isArray(portfolio) ? portfolio : (portfolio?.holdings ?? [])),
                 page: 'orders', status, side,
             });
         }
         catch {
             return res.render('orders/index', {
                 title: 'Orders — RSE',
-                myOrders: [], allOrders: [], isAdminOrBroker, securities: '[]', page: 'orders',
+                myOrders: [], allOrders: [], isAdminOrBroker, securities: '[]', portfolio: '[]', page: 'orders',
             });
         }
     }

@@ -6,12 +6,16 @@ const typeorm_1 = require("@nestjs/typeorm");
 const security_entity_1 = require("./modules/securities/security.entity");
 const user_entity_1 = require("./modules/users/user.entity");
 const broker_entity_1 = require("./modules/brokers/broker.entity");
+const order_entity_1 = require("./modules/orders/order.entity");
+const portfolio_entity_1 = require("./modules/portfolio/portfolio.entity");
 const bcrypt = require("bcryptjs");
 async function seed() {
     const app = await core_1.NestFactory.createApplicationContext(app_module_1.AppModule);
     const securityRepo = app.get((0, typeorm_1.getRepositoryToken)(security_entity_1.Security));
     const userRepo = app.get((0, typeorm_1.getRepositoryToken)(user_entity_1.User));
     const brokerRepo = app.get((0, typeorm_1.getRepositoryToken)(broker_entity_1.Broker));
+    const orderRepo = app.get((0, typeorm_1.getRepositoryToken)(order_entity_1.Order));
+    const portfolioRepo = app.get((0, typeorm_1.getRepositoryToken)(portfolio_entity_1.Portfolio));
     console.log('🌱 Seeding RSE Platform database...');
     const securities = [
         { ticker: 'BK', companyName: 'Bank of Kigali Group PLC', isin: 'RW000A1H63L5', type: security_entity_1.SecurityType.EQUITY, sector: 'Banking', currentPrice: 328.00, previousClose: 325.00, openPrice: 326.00, highPrice: 330.00, lowPrice: 324.00, sharesOutstanding: 534000000, marketCap: 175152000000, dividendYield: 3.05, volume: 45230, currency: 'RWF', description: 'Bank of Kigali is the largest bank in Rwanda by assets, offering retail, corporate, and investment banking services.' },
@@ -103,9 +107,105 @@ async function seed() {
             console.log(`  ✓ Broker seeded: ${b.firmName}`);
         }
     }
+    const investorEmail = 'investor@rse.rw';
+    let investor = await userRepo.findOne({ where: { email: investorEmail } });
+    if (!investor) {
+        investor = await userRepo.save(userRepo.create({
+            email: investorEmail,
+            password: await bcrypt.hash('Investor@RSE2024!', 12),
+            firstName: 'Alice',
+            lastName: 'Mutesi',
+            role: user_entity_1.UserRole.INVESTOR,
+            status: user_entity_1.UserStatus.ACTIVE,
+        }));
+        console.log(`  ✓ Investor user: ${investorEmail}`);
+    }
+    const bk = await securityRepo.findOne({ where: { ticker: 'BK' } });
+    const mtn = await securityRepo.findOne({ where: { ticker: 'MTN' } });
+    if (bk && mtn && investor) {
+        const bkHolding = await portfolioRepo.findOne({ where: { investorId: investor.id, securityId: bk.id } });
+        if (!bkHolding) {
+            await portfolioRepo.save(portfolioRepo.create({
+                investorId: investor.id,
+                securityId: bk.id,
+                quantity: 500,
+                averageCost: 310.00,
+                totalCost: 155000.00,
+            }));
+            console.log('  ✓ Portfolio holding seeded: BK x500');
+        }
+        const mtnHolding = await portfolioRepo.findOne({ where: { investorId: investor.id, securityId: mtn.id } });
+        if (!mtnHolding) {
+            await portfolioRepo.save(portfolioRepo.create({
+                investorId: investor.id,
+                securityId: mtn.id,
+                quantity: 1000,
+                averageCost: 170.00,
+                totalCost: 170000.00,
+            }));
+            console.log('  ✓ Portfolio holding seeded: MTN x1000');
+        }
+        const existingOrders = await orderRepo.count({ where: { investorId: investor.id } });
+        if (existingOrders === 0) {
+            await orderRepo.save([
+                orderRepo.create({
+                    investorId: investor.id,
+                    securityId: bk.id,
+                    side: order_entity_1.OrderSide.BUY,
+                    type: order_entity_1.OrderType.MARKET,
+                    quantity: 500,
+                    limitPrice: 310.00,
+                    executedPrice: 310.00,
+                    filledQuantity: 500,
+                    commission: 1550.00,
+                    status: order_entity_1.OrderStatus.FILLED,
+                    notes: 'Initial BK purchase',
+                }),
+                orderRepo.create({
+                    investorId: investor.id,
+                    securityId: mtn.id,
+                    side: order_entity_1.OrderSide.BUY,
+                    type: order_entity_1.OrderType.MARKET,
+                    quantity: 1000,
+                    limitPrice: 170.00,
+                    executedPrice: 170.00,
+                    filledQuantity: 1000,
+                    commission: 1700.00,
+                    status: order_entity_1.OrderStatus.FILLED,
+                    notes: 'Initial MTN purchase',
+                }),
+                orderRepo.create({
+                    investorId: investor.id,
+                    securityId: bk.id,
+                    side: order_entity_1.OrderSide.SELL,
+                    type: order_entity_1.OrderType.LIMIT,
+                    quantity: 100,
+                    limitPrice: 335.00,
+                    filledQuantity: 0,
+                    status: order_entity_1.OrderStatus.PENDING,
+                    notes: 'Sell BK at target price',
+                }),
+                orderRepo.create({
+                    investorId: investor.id,
+                    securityId: mtn.id,
+                    side: order_entity_1.OrderSide.SELL,
+                    type: order_entity_1.OrderType.MARKET,
+                    quantity: 200,
+                    limitPrice: 180.00,
+                    executedPrice: 180.00,
+                    filledQuantity: 200,
+                    commission: 360.00,
+                    status: order_entity_1.OrderStatus.FILLED,
+                    notes: 'Partial MTN exit',
+                }),
+            ]);
+            console.log('  ✓ Sample buy & sell orders seeded for investor');
+        }
+    }
     console.log('\n✅ Seed complete!');
-    console.log('   Admin login:  admin@rse.rw / Admin@RSE2024!');
-    console.log('   Broker login: info@africafinancial.rw / Broker@RSE2024!');
+    console.log('   Admin login:    admin@rse.rw / Admin@RSE2024!');
+    console.log('   Broker login:   info@africafinancial.rw / Broker@RSE2024!');
+    console.log('   Investor login: investor@rse.rw / Investor@RSE2024!');
     await app.close();
 }
 seed().catch(err => { console.error(err); process.exit(1); });

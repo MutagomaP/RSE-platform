@@ -1,67 +1,91 @@
 <section class="page-hero">
   <div class="container">
-    <h1>Licensed Brokers</h1>
-    <p>CMA-licensed stockbroker firms authorized to execute trades on the Rwanda Stock Exchange</p>
+    <h1>Brokers</h1>
+    <p>Stockbroker firms registered on the Rwanda Stock Exchange</p>
   </div>
 </section>
 
 <section class="section">
   <div class="container">
-    <div class="alert alert-info mb-4">
-      ℹ All brokers listed here hold a valid Capital Markets Authority (CMA) Rwanda license. 
-      Contact a broker to open a CSD account and begin trading.
+
+    <!-- Status Filter Tabs -->
+    <div class="card mb-3" style="padding:1rem 1.5rem;">
+      <form action="/brokers" method="GET" id="brokerFilterForm">
+        <input type="hidden" name="status" id="brokerStatusInput" value="{{status}}">
+        <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+          <span class="text-sm text-muted" style="margin-right:0.25rem;">Filter:</span>
+          <button type="button" onclick="setBrokerStatus('')"           class="btn btn-sm {{#unless status}}btn-green{{else}}btn-secondary{{/unless}}">All</button>
+          <button type="button" onclick="setBrokerStatus('licensed')"   class="btn btn-sm {{#if (eq status 'licensed')}}btn-green{{else}}btn-secondary{{/if}}">Licensed</button>
+          <button type="button" onclick="setBrokerStatus('pending')"    class="btn btn-sm {{#if (eq status 'pending')}}btn-green{{else}}btn-secondary{{/if}}">Pending</button>
+          <button type="button" onclick="setBrokerStatus('suspended')"  class="btn btn-sm {{#if (eq status 'suspended')}}btn-green{{else}}btn-secondary{{/if}}">Suspended</button>
+          <button type="button" onclick="setBrokerStatus('revoked')"    class="btn btn-sm {{#if (eq status 'revoked')}}btn-green{{else}}btn-secondary{{/if}}">Revoked</button>
+        </div>
+      </form>
     </div>
 
     {{#if brokers.length}}
-    <div class="grid-3">
-      {{#each brokers}}
-      <div class="broker-card">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:0.75rem;">
-          <div class="broker-logo">{{upper (truncate this.firmName 2)}}</div>
-          <span class="badge {{badgeClass this.status}}">{{upper this.status}}</span>
-        </div>
-        <div class="broker-name">{{this.firmName}}</div>
-        <div class="broker-license">License No: {{this.licenseNumber}}</div>
-        {{#if this.district}}<div class="text-sm text-muted mb-1">📍 {{this.district}}, Rwanda</div>{{/if}}
-        <p class="broker-desc">{{truncate this.description 100}}</p>
-
-        {{#if this.specializations.length}}
-        <div style="display:flex;gap:0.35rem;flex-wrap:wrap;margin-bottom:0.75rem;">
-          {{#each this.specializations}}
-          <span class="badge badge-secondary" style="font-size:0.65rem;">{{this}}</span>
-          {{/each}}
-        </div>
-        {{/if}}
-
-        <div class="broker-meta">
-          <div class="broker-meta-item">
-            <div class="broker-meta-val">{{this.commissionRate}}%</div>
-            <div class="broker-meta-lbl">Commission</div>
-          </div>
-          <div class="broker-meta-item">
-            <div class="broker-meta-val">{{this.totalTrades}}</div>
-            <div class="broker-meta-lbl">Trades</div>
-          </div>
-          <div class="broker-meta-item">
-            <div class="broker-meta-val">{{this.totalClients}}</div>
-            <div class="broker-meta-lbl">Clients</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:0.5rem;margin-top:1rem;">
-          <a href="/brokers/{{this.id}}" class="btn btn-outline btn-sm" style="flex:1;text-align:center;">View Profile</a>
-          {{#if isLoggedIn}}
-          <a href="/orders?brokerId={{this.id}}" class="btn btn-green btn-sm" style="flex:1;text-align:center;">Trade via Broker</a>
-          {{/if}}
-        </div>
+    <div class="card">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Firm Name</th>
+              <th>License No</th>
+              <th>District</th>
+              <th>Specializations</th>
+              <th class="text-right">Commission</th>
+              <th class="text-right">Trades</th>
+              <th class="text-right">Clients</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each brokers}}
+            <tr>
+              <td class="fw-600">{{this.firmName}}</td>
+              <td class="text-sm text-muted">{{this.licenseNumber}}</td>
+              <td class="text-sm">{{#if this.district}}{{this.district}}{{else}}—{{/if}}</td>
+              <td>
+                {{#if this.specializations.length}}
+                <div style="display:flex;gap:0.25rem;flex-wrap:wrap;">
+                  {{#each this.specializations}}
+                  <span class="badge badge-secondary" style="font-size:0.65rem;">{{this}}</span>
+                  {{/each}}
+                </div>
+                {{else}}—{{/if}}
+              </td>
+              <td class="text-right text-sm">{{this.commissionRate}}%</td>
+              <td class="text-right text-sm">{{this.totalTrades}}</td>
+              <td class="text-right text-sm">{{this.totalClients}}</td>
+              <td><span class="badge {{badgeClass this.status}}">{{upper this.status}}</span></td>
+              <td>
+                <div style="display:flex;gap:0.4rem;">
+                  <a href="/brokers/{{this.id}}" class="btn btn-secondary btn-sm">View</a>
+                  {{#if isLoggedIn}}
+                  <a href="/orders?brokerId={{this.id}}" class="btn btn-green btn-sm">Trade</a>
+                  {{/if}}
+                </div>
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+        </table>
       </div>
-      {{/each}}
     </div>
     {{else}}
     <div class="empty-state">
       <div class="empty-state-icon">🏦</div>
-      <h3>No licensed brokers yet</h3>
-      <p>Broker profiles will appear here once approved by CMA Rwanda</p>
+      <h3>No brokers found</h3>
+      <p>{{#if status}}No brokers with status "{{status}}"{{else}}No broker profiles registered yet{{/if}}</p>
     </div>
     {{/if}}
   </div>
 </section>
+
+<script>
+  function setBrokerStatus(value) {
+    document.getElementById('brokerStatusInput').value = value;
+    document.getElementById('brokerFilterForm').submit();
+  }
+</script>

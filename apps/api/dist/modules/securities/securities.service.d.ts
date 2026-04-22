@@ -12,6 +12,10 @@ export declare class CreateSecurityDto {
     isCrossListed?: boolean;
     primaryExchange?: string;
 }
+export declare class FindSecuritiesQueryDto {
+    search?: string;
+    type?: SecurityType;
+}
 export declare class SecuritiesService {
     private repo;
     constructor(repo: Repository<Security>);

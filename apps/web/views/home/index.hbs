@@ -1,33 +1,3 @@
-<!-- TICKER STRIP -->
-{{#if market}}
-<div class="ticker-strip">
-  <div class="ticker-inner" id="tickerInner">
-    {{#each market.gainers}}
-    <div class="ticker-item">
-      <span class="ticker-symbol">{{this.ticker}}</span>
-      <span class="ticker-price">{{formatCurrency this.currentPrice}}</span>
-      <span class="ticker-change up">▲ {{abs this.changePct}}%</span>
-    </div>
-    {{/each}}
-    {{#each market.losers}}
-    <div class="ticker-item">
-      <span class="ticker-symbol">{{this.ticker}}</span>
-      <span class="ticker-price">{{formatCurrency this.currentPrice}}</span>
-      <span class="ticker-change down">▼ {{abs this.changePct}}%</span>
-    </div>
-    {{/each}}
-    <!-- duplicate for infinite scroll -->
-    {{#each market.gainers}}
-    <div class="ticker-item">
-      <span class="ticker-symbol">{{this.ticker}}</span>
-      <span class="ticker-price">{{formatCurrency this.currentPrice}}</span>
-      <span class="ticker-change up">▲ {{abs this.changePct}}%</span>
-    </div>
-    {{/each}}
-  </div>
-</div>
-{{/if}}
-
 <!-- HERO -->
 <section class="hero">
   <div class="container hero-content">
@@ -61,6 +31,36 @@
     </div>
   </div>
 </section>
+
+<!-- TICKER STRIP -->
+{{#if market}}
+<div class="ticker-strip">
+  <div class="ticker-inner" id="tickerInner">
+    {{#each market.gainers}}
+    <div class="ticker-item">
+      <span class="ticker-symbol">{{this.ticker}}</span>
+      <span class="ticker-price">{{formatCurrency this.currentPrice ''}}</span>
+      <span class="ticker-change up">▲ {{abs this.changePct}}%</span>
+    </div>
+    {{/each}}
+    {{#each market.losers}}
+    <div class="ticker-item">
+      <span class="ticker-symbol">{{this.ticker}}</span>
+      <span class="ticker-price">{{formatCurrency this.currentPrice ''}}</span>
+      <span class="ticker-change down">▼ {{abs this.changePct}}%</span>
+    </div>
+    {{/each}}
+    <!-- duplicate for infinite scroll -->
+    {{#each market.gainers}}
+    <div class="ticker-item">
+      <span class="ticker-symbol">{{this.ticker}}</span>
+      <span class="ticker-price">{{formatCurrency this.currentPrice ''}}</span>
+      <span class="ticker-change up">▲ {{abs this.changePct}}%</span>
+    </div>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
 
 <!-- MARKET INDICES -->
 {{#if market}}
@@ -180,7 +180,6 @@
     <div class="grid-3">
       {{#each brokers}}
       <div class="broker-card">
-        <div class="broker-logo">{{upper (truncate this.firmName 2)}}</div>
         <div class="broker-name">{{this.firmName}}</div>
         <div class="broker-license">License: {{this.licenseNumber}} · <span class="badge badge-success">Licensed</span></div>
         <p class="broker-desc">{{truncate this.description 80}}</p>

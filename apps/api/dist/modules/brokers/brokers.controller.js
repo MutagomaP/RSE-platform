@@ -17,6 +17,7 @@ const common_1 = require("@nestjs/common");
 const swagger_1 = require("@nestjs/swagger");
 const brokers_service_1 = require("./brokers.service");
 const guards_1 = require("../auth/guards");
+const guards_2 = require("../auth/guards");
 const user_entity_1 = require("../users/user.entity");
 const broker_entity_1 = require("./broker.entity");
 let BrokersController = class BrokersController {
@@ -35,8 +36,9 @@ let BrokersController = class BrokersController {
     create(req, dto) {
         return this.brokersService.create(req.user.id, dto);
     }
-    update(req, dto) {
-        return this.brokersService.findByUserId(req.user.id).then(b => this.brokersService.update(b.id, dto));
+    async update(req, dto) {
+        const b = await this.brokersService.findByUserId(req.user.id);
+        return this.brokersService.update(b.id, dto);
     }
     approve(id) {
         return this.brokersService.approve(id);
@@ -48,7 +50,7 @@ let BrokersController = class BrokersController {
 exports.BrokersController = BrokersController;
 __decorate([
     (0, common_1.Get)(),
-    (0, swagger_1.ApiOperation)({ summary: 'List all licensed brokers' }),
+    (0, swagger_1.ApiOperation)({ summary: 'List all brokers, optionally filtered by status' }),
     (0, swagger_1.ApiQuery)({ name: 'status', enum: broker_entity_1.BrokerStatus, required: false }),
     __param(0, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
@@ -57,7 +59,9 @@ __decorate([
 ], BrokersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('my-profile'),
+    (0, common_1.UseGuards)(guards_2.JwtAuthGuard, guards_1.RolesGuard),
     (0, guards_1.Roles)(user_entity_1.UserRole.BROKER),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Get my broker profile' }),
     __param(0, (0, common_1.Request)()),
     __metadata("design:type", Function),
@@ -74,7 +78,9 @@ __decorate([
 ], BrokersController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Post)(),
+    (0, common_1.UseGuards)(guards_2.JwtAuthGuard, guards_1.RolesGuard),
     (0, guards_1.Roles)(user_entity_1.UserRole.BROKER),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Create broker profile' }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
@@ -84,18 +90,22 @@ __decorate([
 ], BrokersController.prototype, "create", null);
 __decorate([
     (0, common_1.Patch)('my-profile'),
+    (0, common_1.UseGuards)(guards_2.JwtAuthGuard, guards_1.RolesGuard),
     (0, guards_1.Roles)(user_entity_1.UserRole.BROKER),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Update my broker profile' }),
     __param(0, (0, common_1.Request)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", void 0)
+    __metadata("design:returntype", Promise)
 ], BrokersController.prototype, "update", null);
 __decorate([
     (0, common_1.Post)(':id/approve'),
     (0, common_1.HttpCode)(200),
+    (0, common_1.UseGuards)(guards_2.JwtAuthGuard, guards_1.RolesGuard),
     (0, guards_1.Roles)(user_entity_1.UserRole.ADMIN),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Approve broker license (admin only)' }),
     __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
@@ -105,7 +115,9 @@ __decorate([
 __decorate([
     (0, common_1.Post)(':id/suspend'),
     (0, common_1.HttpCode)(200),
+    (0, common_1.UseGuards)(guards_2.JwtAuthGuard, guards_1.RolesGuard),
     (0, guards_1.Roles)(user_entity_1.UserRole.ADMIN),
+    (0, swagger_1.ApiBearerAuth)(),
     (0, swagger_1.ApiOperation)({ summary: 'Suspend broker (admin only)' }),
     __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe())),
     __metadata("design:type", Function),
@@ -114,8 +126,6 @@ __decorate([
 ], BrokersController.prototype, "suspend", null);
 exports.BrokersController = BrokersController = __decorate([
     (0, swagger_1.ApiTags)('brokers'),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, common_1.UseGuards)(guards_1.JwtAuthGuard, guards_1.RolesGuard),
     (0, common_1.Controller)('brokers'),
     __metadata("design:paramtypes", [brokers_service_1.BrokersService])
 ], BrokersController);

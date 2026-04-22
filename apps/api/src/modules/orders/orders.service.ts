@@ -44,12 +44,15 @@ export class OrdersService {
       dto.type = OrderType.MARKET;
     }
 
+    // For sell orders: check holdings to decide if we can execute immediately.
+    // The order is always saved as PENDING so it appears in the order list.
+    let insufficientShares = false;
     if (dto.side === OrderSide.SELL) {
       const holding = await this.portfolioRepo.findOne({
         where: { investorId, securityId: dto.securityId },
       });
       if (!holding || holding.quantity < dto.quantity) {
-        throw new BadRequestException('Insufficient shares to sell');
+        insufficientShares = true;
       }
     }
 
@@ -66,8 +69,10 @@ export class OrdersService {
     });
     await this.orderRepo.save(order);
 
-    if (order.type === OrderType.MARKET) {
+    if (order.type === OrderType.MARKET && !insufficientShares) {
       await this.matchOrder(order, security);
+    } else if (insufficientShares) {
+      await this.orderRepo.update(order.id, { status: OrderStatus.PENDING, notes: (order.notes ? order.notes + ' ' : '') + '[Queued: insufficient shares at time of placement]' });
     }
 
     return this.orderRepo.findOne({

@@ -10,7 +10,6 @@ export enum SecurityType {
   EQUITY = 'equity',
   BOND = 'bond',
   ETF = 'etf',
-  PREFERENCE_SHARE = 'preference_share',
 }
 
 export enum SecurityStatus {

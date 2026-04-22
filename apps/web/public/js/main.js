@@ -26,12 +26,16 @@ function switchOrderTab(side) {
     submitBtn.className = `btn btn-lg btn-block btn-${side === 'buy' ? 'green' : 'danger'}`;
     submitBtn.textContent = side === 'buy' ? 'Place Buy Order' : 'Place Sell Order';
   }
+  // Refresh hints for the newly selected side
+  const sel = document.getElementById('securitySelect');
+  if (sel && sel.value) sel.dispatchEvent(new Event('change'));
 }
 
 // ── SECURITY SELECTOR IN ORDER FORM ──
-function populateSecuritySelect(securitiesJson) {
+function populateSecuritySelect(securitiesJson, portfolioJson) {
   try {
     const securities = typeof securitiesJson === 'string' ? JSON.parse(securitiesJson) : securitiesJson;
+    const portfolio = typeof portfolioJson === 'string' ? JSON.parse(portfolioJson) : (portfolioJson || []);
     const sel = document.getElementById('securitySelect');
     if (!sel || !securities) return;
     sel.innerHTML = '<option value="">Select a security…</option>';
@@ -40,13 +44,26 @@ function populateSecuritySelect(securitiesJson) {
       opt.value = s.id;
       opt.textContent = `${s.ticker} — ${s.companyName}`;
       opt.dataset.price = s.currentPrice;
+      const holding = portfolio.find(p => p.securityId === s.id);
+      opt.dataset.shares = holding ? holding.quantity : 0;
       sel.appendChild(opt);
     });
     sel.addEventListener('change', () => {
       const opt = sel.options[sel.selectedIndex];
       const priceEl = document.getElementById('currentPriceHint');
+      const sharesEl = document.getElementById('availableSharesHint');
+      const side = (document.getElementById('orderSide') || {}).value || 'buy';
       if (priceEl && opt.dataset.price) {
         priceEl.textContent = `Current price: RWF ${parseFloat(opt.dataset.price).toFixed(2)}`;
+      }
+      if (sharesEl) {
+        if (side === 'sell' && opt.value) {
+          const shares = parseInt(opt.dataset.shares || '0', 10);
+          sharesEl.textContent = `Available shares: ${shares.toLocaleString()}`;
+          sharesEl.style.display = 'block';
+        } else {
+          sharesEl.style.display = 'none';
+        }
       }
     });
   } catch (e) { console.error('Security populate error', e); }

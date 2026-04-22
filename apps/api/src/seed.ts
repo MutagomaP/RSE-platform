@@ -1,7 +1,7 @@
 /**
  * RSE Platform — Database Seed Script
  * Run: npx ts-node src/seed.ts
- * Seeds: RSE-listed securities, sample brokers, admin user
+ * Seeds: RSE-listed securities, sample brokers, admin user, investor with orders
  */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -10,6 +10,8 @@ import { Repository } from 'typeorm';
 import { Security, SecurityType, SecurityStatus } from './modules/securities/security.entity';
 import { User, UserRole, UserStatus } from './modules/users/user.entity';
 import { Broker, BrokerStatus } from './modules/brokers/broker.entity';
+import { Order, OrderSide, OrderType, OrderStatus } from './modules/orders/order.entity';
+import { Portfolio } from './modules/portfolio/portfolio.entity';
 import * as bcrypt from 'bcryptjs';
 
 async function seed() {
@@ -18,6 +20,8 @@ async function seed() {
   const securityRepo: Repository<Security> = app.get(getRepositoryToken(Security));
   const userRepo: Repository<User> = app.get(getRepositoryToken(User));
   const brokerRepo: Repository<Broker> = app.get(getRepositoryToken(Broker));
+  const orderRepo: Repository<Order> = app.get(getRepositoryToken(Order));
+  const portfolioRepo: Repository<Portfolio> = app.get(getRepositoryToken(Portfolio));
 
   console.log('🌱 Seeding RSE Platform database...');
 
@@ -119,9 +123,114 @@ async function seed() {
     }
   }
 
+  // ── Investor User ────────────────────────────────────────────────────────────
+  const investorEmail = 'investor@rse.rw';
+  let investor = await userRepo.findOne({ where: { email: investorEmail } });
+  if (!investor) {
+    investor = await userRepo.save(userRepo.create({
+      email: investorEmail,
+      password: await bcrypt.hash('Investor@RSE2024!', 12),
+      firstName: 'Alice',
+      lastName: 'Mutesi',
+      role: UserRole.INVESTOR,
+      status: UserStatus.ACTIVE,
+    }));
+    console.log(`  ✓ Investor user: ${investorEmail}`);
+  }
+
+  // ── Seed Portfolio Holdings & Orders for Investor ─────────────────────────
+  const bk = await securityRepo.findOne({ where: { ticker: 'BK' } });
+  const mtn = await securityRepo.findOne({ where: { ticker: 'MTN' } });
+
+  if (bk && mtn && investor) {
+    // Portfolio holdings (so sell orders can be placed)
+    const bkHolding = await portfolioRepo.findOne({ where: { investorId: investor.id, securityId: bk.id } });
+    if (!bkHolding) {
+      await portfolioRepo.save(portfolioRepo.create({
+        investorId: investor.id,
+        securityId: bk.id,
+        quantity: 500,
+        averageCost: 310.00,
+        totalCost: 155000.00,
+      }));
+      console.log('  ✓ Portfolio holding seeded: BK x500');
+    }
+
+    const mtnHolding = await portfolioRepo.findOne({ where: { investorId: investor.id, securityId: mtn.id } });
+    if (!mtnHolding) {
+      await portfolioRepo.save(portfolioRepo.create({
+        investorId: investor.id,
+        securityId: mtn.id,
+        quantity: 1000,
+        averageCost: 170.00,
+        totalCost: 170000.00,
+      }));
+      console.log('  ✓ Portfolio holding seeded: MTN x1000');
+    }
+
+    // Sample orders — buy and sell
+    const existingOrders = await orderRepo.count({ where: { investorId: investor.id } });
+    if (existingOrders === 0) {
+      await orderRepo.save([
+        orderRepo.create({
+          investorId: investor.id,
+          securityId: bk.id,
+          side: OrderSide.BUY,
+          type: OrderType.MARKET,
+          quantity: 500,
+          limitPrice: 310.00,
+          executedPrice: 310.00,
+          filledQuantity: 500,
+          commission: 1550.00,
+          status: OrderStatus.FILLED,
+          notes: 'Initial BK purchase',
+        }),
+        orderRepo.create({
+          investorId: investor.id,
+          securityId: mtn.id,
+          side: OrderSide.BUY,
+          type: OrderType.MARKET,
+          quantity: 1000,
+          limitPrice: 170.00,
+          executedPrice: 170.00,
+          filledQuantity: 1000,
+          commission: 1700.00,
+          status: OrderStatus.FILLED,
+          notes: 'Initial MTN purchase',
+        }),
+        orderRepo.create({
+          investorId: investor.id,
+          securityId: bk.id,
+          side: OrderSide.SELL,
+          type: OrderType.LIMIT,
+          quantity: 100,
+          limitPrice: 335.00,
+          filledQuantity: 0,
+          status: OrderStatus.PENDING,
+          notes: 'Sell BK at target price',
+        }),
+        orderRepo.create({
+          investorId: investor.id,
+          securityId: mtn.id,
+          side: OrderSide.SELL,
+          type: OrderType.MARKET,
+          quantity: 200,
+          limitPrice: 180.00,
+          executedPrice: 180.00,
+          filledQuantity: 200,
+          commission: 360.00,
+          status: OrderStatus.FILLED,
+          notes: 'Partial MTN exit',
+        }),
+      ]);
+      console.log('  ✓ Sample buy & sell orders seeded for investor');
+    }
+  }
+
   console.log('\n✅ Seed complete!');
-  console.log('   Admin login:  admin@rse.rw / Admin@RSE2024!');
-  console.log('   Broker login: info@africafinancial.rw / Broker@RSE2024!');
+  console.log('   Admin login:    admin@rse.rw / Admin@RSE2024!');
+  console.log('   Broker login:   info@africafinancial.rw / Broker@RSE2024!');
+  console.log('   Investor login: investor@rse.rw / Investor@RSE2024!');
   await app.close();
 }
 

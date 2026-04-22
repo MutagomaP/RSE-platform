@@ -84,12 +84,13 @@ let OrdersService = class OrdersService {
             dto.limitPrice = Number(security.currentPrice);
             dto.type = order_entity_1.OrderType.MARKET;
         }
+        let insufficientShares = false;
         if (dto.side === order_entity_1.OrderSide.SELL) {
             const holding = await this.portfolioRepo.findOne({
                 where: { investorId, securityId: dto.securityId },
             });
             if (!holding || holding.quantity < dto.quantity) {
-                throw new common_1.BadRequestException('Insufficient shares to sell');
+                insufficientShares = true;
             }
         }
         const order = this.orderRepo.create({
@@ -104,8 +105,11 @@ let OrdersService = class OrdersService {
             status: order_entity_1.OrderStatus.PENDING,
         });
         await this.orderRepo.save(order);
-        if (order.type === order_entity_1.OrderType.MARKET) {
+        if (order.type === order_entity_1.OrderType.MARKET && !insufficientShares) {
             await this.matchOrder(order, security);
+        }
+        else if (insufficientShares) {
+            await this.orderRepo.update(order.id, { status: order_entity_1.OrderStatus.PENDING, notes: (order.notes ? order.notes + ' ' : '') + '[Queued: insufficient shares at time of placement]' });
         }
         return this.orderRepo.findOne({
             where: { id: order.id },

@@ -16,7 +16,6 @@ var SecurityType;
     SecurityType["EQUITY"] = "equity";
     SecurityType["BOND"] = "bond";
     SecurityType["ETF"] = "etf";
-    SecurityType["PREFERENCE_SHARE"] = "preference_share";
 })(SecurityType || (exports.SecurityType = SecurityType = {}));
 var SecurityStatus;
 (function (SecurityStatus) {

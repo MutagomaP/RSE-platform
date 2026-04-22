@@ -1,8 +1,7 @@
 export declare enum SecurityType {
     EQUITY = "equity",
     BOND = "bond",
-    ETF = "etf",
-    PREFERENCE_SHARE = "preference_share"
+    ETF = "etf"
 }
 export declare enum SecurityStatus {
     ACTIVE = "active",

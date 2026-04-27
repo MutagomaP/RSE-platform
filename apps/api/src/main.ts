@@ -46,13 +46,20 @@ async function bootstrap() {
   console.log(`RSE API running on: http://localhost:${port}`);
   console.log(`Swagger docs: http://localhost:${port}/api/docs`);
 
-  // Auto-seed database on startup if empty
-  try {
-    const seedService = app.get(SeedService);
-    const result = await seedService.seedDatabase();
-    console.log('✅ Database seeding successful', result.message);
-  } catch (error) {
-    console.log('ℹ️ Database seeding skipped:', error.message);
-  }
+  // Auto-seed database after app is fully initialized
+  setTimeout(async () => {
+    try {
+      console.log('🌱 Attempting to seed database...');
+      const seedService = app.get(SeedService);
+      const result = await seedService.seedDatabase();
+      console.log('✅ Seeding result:', result.message);
+      if (result.securities > 0) {
+        console.log(`   📊 Created: ${result.securities} securities, ${result.users} users, ${result.brokers} brokers`);
+      }
+    } catch (error) {
+      console.error('❌ Seeding failed:', error.message);
+      console.error('Stack:', error.stack);
+    }
+  }, 3000); // Wait 3 seconds for database connection to be ready
 }
 bootstrap();

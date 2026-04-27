@@ -25,7 +25,7 @@ import { MarketModule } from './modules/market/market.module';
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
-            synchronize: configService.get('NODE_ENV') !== 'production',
+            synchronize: false,
             ssl: { rejectUnauthorized: false },
           };
         }

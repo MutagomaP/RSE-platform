@@ -10,5 +10,6 @@ import { Broker } from '../brokers/broker.entity';
   imports: [TypeOrmModule.forFeature([Security, User, Broker])],
   controllers: [SeedController],
   providers: [SeedService],
+  exports: [SeedService],
 })
 export class SeedModule {}

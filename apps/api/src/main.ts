@@ -44,5 +44,14 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`RSE API running on: http://localhost:${port}`);
   console.log(`Swagger docs: http://localhost:${port}/api/docs`);
+
+  // Auto-seed database on startup if empty
+  try {
+    const seedService = app.get('SeedService');
+    await seedService.seedDatabase();
+    console.log('✅ Database seeding completed');
+  } catch (error) {
+    console.log('ℹ️ Database seeding skipped or already seeded');
+  }
 }
 bootstrap();

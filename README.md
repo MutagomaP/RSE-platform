@@ -103,7 +103,7 @@ cd apps/api && npm run start:dev
 cd apps/web && npm run start:dev
 ```
 
-Open http://localhost:3001
+Open http://localhost:3000
 
 ---
 
@@ -114,7 +114,7 @@ docker-compose up --build
 ```
 
 Access:
-- Web: http://localhost:3001
+- Web: http://localhost:3000
 - API: http://localhost:3000
 - Swagger: http://localhost:3000/api/docs
 
